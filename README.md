@@ -1,3 +1,9 @@
+# Wordle-ish
+
+Here's the Wordle clone we put together over on [Twitch](https://www.twitch.tv/typeof_dan) 🤙
+
+---
+
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started
