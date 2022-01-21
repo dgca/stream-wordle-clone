@@ -1,3 +1,15 @@
+:root {
+  --black: #141414;
+  --white: #eef0f2;
+  --yellow: #eec643;
+  --green: #419d78;
+  --gray: #BEBFC6;
+  --gray-dark: #A8A9B3;
+
+  background-color: var(--black);
+  color: var(--white);
+}
+
 html,
 body {
   padding: 0;

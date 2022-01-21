@@ -1,0 +1,122 @@
+.submittedGuess {
+  display: flex;
+  justify-content: center;
+}
+
+.char {
+  border: 3px solid var(--white);
+  display: flex;
+  height: 60px;
+  width: 60px;
+  justify-content: center;
+  align-items: center;
+  margin: 5px;
+  transform: rotateX(0deg);
+}
+
+.guessedChar {
+  animation: flipIn, removeBorder, bgIncorrect;
+}
+
+.correctChar {
+  animation: flipIn, removeBorder, bgCorrect;
+}
+
+.presentChar {
+  animation: flipIn, removeBorder, bgPresent;
+}
+
+.guessedChar,
+.correctChar,
+.presentChar {
+  animation-duration: 1s, 1s, 1s;
+  animation-timing-function: linear, linear, linear;
+  animation-fill-mode: forwards, forwards, forwards;
+}
+
+.char:nth-of-type(2) {
+  animation-delay: 500ms;
+}
+.char:nth-of-type(3) {
+  animation-delay: 1000ms;
+}
+.char:nth-of-type(4) {
+  animation-delay: 1500ms;
+}
+.char:nth-of-type(5) {
+  animation-delay: 2000ms;
+}
+
+@keyframes flipIn {
+  0% {
+    transform: rotateX(0deg);
+  }
+  50% {
+    border: 0;
+    transform: rotateX(90deg);
+  }
+  100% {
+    border: 0;
+    transform: rotateX(0deg);
+  }
+}
+
+@keyframes removeBorder {
+  0% {
+    border: 3px solid var(--white);
+  }
+  49% {
+    border: 3px solid var(--white);
+  }
+  50% {
+    border: 0;
+  }
+  100% {
+    border: 0;
+  }
+}
+
+@keyframes bgIncorrect {
+  0% {
+    background-color: transparent;
+  }
+  49% {
+    background-color: transparent;
+  }
+  50% {
+    background-color: rgba(255, 255, 255, 0.2);
+  }
+  100% {
+    background-color: rgba(255, 255, 255, 0.2);
+  }
+}
+
+@keyframes bgCorrect {
+  0% {
+    background-color: transparent;
+  }
+  49% {
+    background-color: transparent;
+  }
+  50% {
+    background-color: var(--green);
+  }
+  100% {
+    background-color: var(--green);
+  }
+}
+
+@keyframes bgPresent {
+  0% {
+    background-color: transparent;
+  }
+  49% {
+    background-color: transparent;
+  }
+  50% {
+    background-color: var(--yellow);
+  }
+  100% {
+    background-color: var(--yellow);
+  }
+}

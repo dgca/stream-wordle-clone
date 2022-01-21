@@ -9,6 +9,7 @@ const wordsDb = [
   "games",
   "taboo",
   "words",
+  "butts",
 ];
 
 function millisToDays(millis: number) {
@@ -27,7 +28,14 @@ export default function word(
   res: NextApiResponse<{ word: string }>
 ) {
   const daysSince = getDaysSince();
-  const index = wordsDb.length % daysSince;
+
+  let index = daysSince;
+  const wordCount = wordsDb.length;
+
+  while (index >= wordCount) {
+    index = index - wordCount;
+  }
+
   const todaysWord = wordsDb[index];
   res.status(200).json({ word: todaysWord });
 }

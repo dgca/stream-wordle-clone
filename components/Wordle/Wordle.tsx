@@ -1,5 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import SubmittedGuess from "./SubmittedGuess/SubmittedGuess";
+import Keyboard from "./Keyboard/Keyboard";
 import styles from "./wordle.module.css";
+
+import type { PuzzleWordCharCountType, GuessType } from "./types";
 
 const totalGuessMax = 6;
 
@@ -19,16 +23,30 @@ function useWordOfTheDay() {
   return word;
 }
 
+function useCharCountMap(word: string | null) {
+  return useMemo(() => {
+    if (word === null) {
+      return {};
+    }
+    return word.split("").reduce<Record<string, number>>((acc, char) => {
+      if (!acc.hasOwnProperty(char)) {
+        acc[char] = 1;
+      } else {
+        acc[char] += 1;
+      }
+      return acc;
+    }, {});
+  }, [word]);
+}
+
 export default function Wordle() {
   const [submittedGuesses, setSubmittedGuesses] = useState<string[][]>([]);
   const [guess, setGuess] = useState<string[]>([]);
 
   const wordOfTheDay = useWordOfTheDay();
 
-  useEffect(() => {
-    function handleKeyDown({ key }: { key: string }) {
-      console.log(key);
-
+  const handleKeyInput = useCallback(
+    (key: string) => {
       const isChar = /^[a-z]$/.test(key);
       const isBackspace = key === "Backspace";
       const isSubmit = key === "Enter";
@@ -46,6 +64,13 @@ export default function Wordle() {
         setSubmittedGuesses((prev) => [...prev, guess]);
         setGuess([]);
       }
+    },
+    [guess]
+  );
+
+  useEffect(() => {
+    function handleKeyDown({ key }: { key: string }) {
+      handleKeyInput(key);
     }
 
     window.addEventListener("keydown", handleKeyDown);
@@ -53,23 +78,9 @@ export default function Wordle() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [guess.length, guess]);
+  }, [guess.length, guess, handleKeyInput]);
 
-  const puzzleWordCharCount = useMemo(() => {
-    if (wordOfTheDay === null) {
-      return {};
-    }
-    return wordOfTheDay
-      .split("")
-      .reduce<Record<string, number>>((acc, char) => {
-        if (!acc.hasOwnProperty(char)) {
-          acc[char] = 1;
-        } else {
-          acc[char] += 1;
-        }
-        return acc;
-      }, {});
-  }, [wordOfTheDay]);
+  const puzzleWordCharCount = useCharCountMap(wordOfTheDay);
 
   if (wordOfTheDay === null) {
     return <p>Loading...</p>;
@@ -83,30 +94,34 @@ export default function Wordle() {
 
   return (
     <div className={styles.wordle}>
-      <div className={styles.wordleBoard}>
-        <SubmittedGuesses
-          submittedGuesses={submittedGuesses}
-          puzzleWord={wordOfTheDay}
-          puzzleWordCharCount={puzzleWordCharCount}
-        />
-        {!isFailure && !isCorrect && <CurrentGuess guess={guess} />}
-
-        {Array.from({
-          length: totalGuessMax - submittedGuesses.length - (isCorrect ? 0 : 1),
-        }).map((_, i) => {
-          return <EmptyGuess key={i} />;
-        })}
-        {isCorrect && (
-          <div className={`${styles.message}`}>
-            You did it! You are the smartest.
-          </div>
-        )}
-        {isFailure && (
-          <div className={`${styles.message}`}>
-            Oh no! Better luck next time.
-          </div>
-        )}
+      <h1 className={styles.title}>Wordleish</h1>
+      <div className={styles.boardPositioner}>
+        <div className={styles.wordleBoard}>
+          <SubmittedGuesses
+            submittedGuesses={submittedGuesses}
+            puzzleWord={wordOfTheDay}
+            puzzleWordCharCount={puzzleWordCharCount}
+          />
+          {!isFailure && !isCorrect && <CurrentGuess guess={guess} />}
+          {Array.from({
+            length:
+              totalGuessMax - submittedGuesses.length - (isCorrect ? 0 : 1),
+          }).map((_, i) => {
+            return <EmptyGuess key={i} />;
+          })}
+          {isCorrect && (
+            <div className={`${styles.message}`}>
+              You did it! You are the smartest.
+            </div>
+          )}
+          {isFailure && (
+            <div className={`${styles.message}`}>
+              Oh no! Better luck next time.
+            </div>
+          )}
+        </div>
       </div>
+      <Keyboard keyPressHandler={handleKeyInput} />
     </div>
   );
 }
@@ -114,7 +129,7 @@ export default function Wordle() {
 type SubmittedGuessesProps = {
   submittedGuesses: string[][];
   puzzleWord: string;
-  puzzleWordCharCount: Record<string, number>;
+  puzzleWordCharCount: PuzzleWordCharCountType;
 };
 
 function SubmittedGuesses({
@@ -138,52 +153,11 @@ function SubmittedGuesses({
   );
 }
 
-function SubmittedGuess({
-  guess,
-  puzzleWord,
-  puzzleWordCharCount,
-}: GuessProps & {
-  puzzleWord: string;
-  puzzleWordCharCount: Record<string, number>;
-}) {
-  const charMap = { ...puzzleWordCharCount };
+type CurrentGuessProps = {
+  guess: GuessType;
+};
 
-  guess.forEach((guessChar, i) => {
-    const isCorrect = puzzleWord[i] === guessChar;
-    if (isCorrect) {
-      charMap[guessChar] -= 1;
-    }
-  });
-
-  return (
-    <div className={styles.submittedGuess}>
-      {guess.map((guessChar, i) => {
-        const puzzleChar = puzzleWord[i];
-        const isCorrect = guessChar === puzzleChar;
-
-        let isPresent = false;
-
-        if (!isCorrect && charMap[guessChar]) {
-          isPresent = true;
-          charMap[guessChar] -= 1;
-        }
-
-        return (
-          <span
-            className={`${styles.char} ${isCorrect ? styles.correctChar : ""} ${
-              isPresent ? styles.presentChar : ""
-            } ${styles.guessedChar}`}
-            key={i}
-          >
-            {guessChar}
-          </span>
-        );
-      })}
-    </div>
-  );
-}
-
-function CurrentGuess({ guess }: GuessProps) {
+function CurrentGuess({ guess }: CurrentGuessProps) {
   return (
     <div className={`${styles.word} ${styles.currentGuess}`}>
       {Array.from({ length: 5 }).map((_, i) => {
@@ -206,6 +180,3 @@ function EmptyGuess() {
     </div>
   );
 }
-type GuessProps = {
-  guess: string[];
-};
